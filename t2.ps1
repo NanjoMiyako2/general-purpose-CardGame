@@ -15,6 +15,103 @@ $cards = @{ 1 =  @("P1", "P2");
             3 =  @("P5", "P8");
             4 =  @(); }
 
+$Cr_User = $userName1
+
+Add-Type -AssemblyName System.Speech
+function SpeechStr($str1){
+    $speak = New-Object System.Speech.Synthesis.SpeechSynthesizer
+    $speak.SelectVoice("Microsoft Haruka Desktop")
+    $speak.Speak($str1)
+
+}
+
+function LoadDekki($name1, $URL1){
+    $arr = Get-Content $URL1
+
+
+    $Y1 = @()
+    for($idx=0; $idx -lt $arr; $idx++){
+        $str = $arr[$idx]
+        $key = $idx+1
+        $script:cardsAndImage[$key] = $str
+        $Y1 += $key
+    }
+    addYamafuda $name1
+    $idx2 = getYamafudaIdx $name1
+    $script:YamafudaArray[$idx2] = $Y1
+
+}
+
+function exeCmd($cmd, $argArray){
+
+    if($cmd -eq "addYamafuda"){
+        addYamafuda $argArray[0]
+    }elseif($cmd -eq "suffleYamafuda"){
+        suffleYamafuda $argArray[0] $argArray[1]
+    }elseif($cmd -eq "move"){
+        moveYamafuda $argArray[0] $argArray[1] $argArray[2] $argArray[3]
+    }elseif($cmd -eq "deleteYamafuda"){
+        $Y1 = getYamafuda($argArray[0])
+        if($Y1.Count -eq 0){
+            deleteYamafuda  $argArray[0]
+        }else{
+            write-host "カードが空の山札のみ削除可能です"
+        }
+    }elseif($cmd -eq "margeYamafuda"){
+        margeYamafuda $argArray[0] $argArray[1] $argArray[2]
+    }elseif($cmd -eq "pinCard"){
+        pinCard $argArray[0] $argArray[1] $argArray[2]
+    }elseif($cmd -eq "margePin"){
+        margePin $argArray[0] $argArray[1] $argArray[2]
+    }elseif($cmd -eq "deletePinCardList"){
+        deletePinCardList $argArray[0] $argArray[1] $argArray[2]
+    }elseif($cmd -eq "deletePinInAllCards"){
+        deletePinAllCards $argArray[0]
+    }elseif($cmd -eq "PeekCards"){
+        $str1 = "山札" + $argArray[0] + "の"
+        if($argArray[1] -eq "head"){]
+            $str2 = "先頭の"
+        }elseif($argArray[1] -eq "tail"){
+            $str2 = "末尾の"
+        }elseif($argArray[1] -eq "random"){
+            $str2 = "ランダムな"
+        }
+        $str1 += $str2
+        $str1 += "カードの"
+        $str1 += $argArray[2] + "枚を確認します"
+
+        SpeechStr $str1
+
+        SpeechStr "該当ユーザは他人に端末の画面を見えないようにしてからエンターキーを押して、カードを確認して下さい"
+
+        PeekCards $argArray[0] $argArray[1] $argArray[2] $argArray[3]
+
+        
+    }elseif($cmd -eq "exeCard"){
+        $str1 = "山札" + $argArray[0] + "の"
+        $str += $argArray[1] + "枚目のカードを行使しします"
+        exeCard $argArray[0] $argArray[1]
+    }elseif($cmd -eq "turnEnd"){
+        write-host "ユーザー"+$script:Cr_User + "のターン終了です"
+        if($script:Cr_User -eq $script:UserName1){
+            $script:Cr_User = $script:UserName2
+        }else{
+            $script:Cr_User = $script:UserNama1
+        }
+    }
+
+}
+
+function startTurn($User1){
+    write-host "ユーザー" + $User1 + "のターン開始です"
+    
+    $cmd = ""
+    while($cmd -ne "turnEnd"){
+       $cmdStr = Read-Host "コマンドを入力"
+       $cmdArrays = $cmdStr.Split(" ");
+       exeCmd $cmdArrays[0] $cmdArrays[0..($cmdArrays.Length-1)]
+    }
+}
 
 
 function addPin($cardsId, $pinName){
